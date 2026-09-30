@@ -2,6 +2,10 @@
 
 AI-powered operations analytics dashboard for monitoring KPIs, costs, productivity, customer experience, and business-unit performance.
 
+## Live Demo
+
+🚀 [Open AI Operations Dashboard](https://cesar-ai-operations-dashboard.streamlit.app)
+
 ## Overview
 
 This project combines Business Operations, Data Analytics, and Artificial Intelligence to support management decision-making.
