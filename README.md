@@ -59,21 +59,20 @@ The dashboard currently monitors:
 
 ## Project Structure
 
-```text
-ai-operations-dashboard/
-│
-├── data/
-│   └── operations_data.csv
-│
-├── src/
-│   ├── __init__.py
-│   └── generate_data.py
-│
-├── app.py
-├── requirements.txt
-├── README.md
-├── .gitignore
-└── LICENSE
+    ai-operations-dashboard/
+    │
+    ├── data/
+    │   └── operations_data.csv
+    │
+    ├── src/
+    │   ├── __init__.py
+    │   └── generate_data.py
+    │
+    ├── app.py
+    ├── requirements.txt
+    ├── README.md
+    ├── .gitignore
+    └── LICENSE
 
 ## OpenAI API Setup
 
@@ -81,5 +80,67 @@ Create an OpenAI API key and configure it as an environment variable.
 
 ### Windows PowerShell
 
-```powershell
-setx OPENAI_API_KEY "your_api_key_here"
+    setx OPENAI_API_KEY "your_api_key_here"
+
+Restart the terminal after configuring the variable.
+
+Never commit your real API key to GitHub.
+
+## Running Locally
+
+Clone the repository:
+
+    git clone https://github.com/uchihab/ai-operations-dashboard.git
+
+Enter the project directory:
+
+    cd ai-operations-dashboard
+
+Create a virtual environment:
+
+    python -m venv .venv
+
+Install dependencies:
+
+    python -m pip install -r requirements.txt
+
+Run the application:
+
+    python -m streamlit run app.py
+
+## Data
+
+The current dataset is simulated for portfolio and demonstration purposes.
+
+It contains operational records for seven business units and includes financial, productivity, staffing, service, and customer-experience indicators.
+
+## Purpose
+
+This project demonstrates practical skills in:
+
+- Business Operations
+- Process Improvement
+- Data Analysis
+- KPI Monitoring
+- AI-assisted Decision Support
+- Operational Performance Management
+- Python Development
+
+## Future Improvements
+
+- SQL database integration
+- Date-range filters
+- Anomaly detection
+- Forecasting
+- Data upload support
+- Enhanced AI recommendations
+- Automated executive reports
+- Authentication and user roles
+
+## Author
+
+**César Augusto Souza de Brito**
+
+Business Operations | AI & Automation | Process Improvement | Data & Digital Products
+
+LinkedIn: linkedin.com/in/cesar-augusto-brito/
