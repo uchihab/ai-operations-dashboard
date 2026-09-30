@@ -324,3 +324,208 @@ st.plotly_chart(
     fig_units,
     use_container_width=True,
 )
+
+# ------------------------------------
+# OPERATIONAL INSIGHTS
+# ------------------------------------
+
+st.divider()
+
+st.subheader("Operational Insights")
+
+st.caption(
+    "Automated analysis of financial, productivity "
+    "and customer experience indicators."
+)
+
+
+unit_metrics = {}
+
+
+for unit in selected_units:
+
+    unit_rows = [
+        row
+        for row in filtered_data
+        if row["business_unit"] == unit
+    ]
+
+    if not unit_rows:
+        continue
+
+    unit_revenue = sum(
+        row["revenue"]
+        for row in unit_rows
+    )
+
+    unit_cost = sum(
+        row["operational_cost"]
+        for row in unit_rows
+    )
+
+    unit_total_profit = sum(
+        row["profit"]
+        for row in unit_rows
+    )
+
+    unit_margin = (
+        unit_total_profit / unit_revenue * 100
+        if unit_revenue
+        else 0
+    )
+
+    unit_productivity = (
+        sum(
+            row["productivity"]
+            for row in unit_rows
+        )
+        / len(unit_rows)
+    )
+
+    unit_satisfaction = (
+        sum(
+            row["customer_satisfaction"]
+            for row in unit_rows
+        )
+        / len(unit_rows)
+    )
+
+    unit_complaints = sum(
+        row["customer_complaints"]
+        for row in unit_rows
+    )
+
+    average_employees = (
+        sum(
+            row["employees"]
+            for row in unit_rows
+        )
+        / len(unit_rows)
+    )
+
+    revenue_per_employee = (
+        unit_revenue / average_employees
+        if average_employees
+        else 0
+    )
+
+    cost_ratio = (
+        unit_cost / unit_revenue * 100
+        if unit_revenue
+        else 0
+    )
+
+    unit_metrics[unit] = {
+        "revenue": unit_revenue,
+        "cost": unit_cost,
+        "profit": unit_total_profit,
+        "margin": unit_margin,
+        "productivity": unit_productivity,
+        "satisfaction": unit_satisfaction,
+        "complaints": unit_complaints,
+        "revenue_per_employee": revenue_per_employee,
+        "cost_ratio": cost_ratio,
+    }
+
+
+if unit_metrics:
+
+    highest_profit_unit = max(
+        unit_metrics,
+        key=lambda unit: unit_metrics[unit]["profit"],
+    )
+
+    lowest_margin_unit = min(
+        unit_metrics,
+        key=lambda unit: unit_metrics[unit]["margin"],
+    )
+
+    lowest_productivity_unit = min(
+        unit_metrics,
+        key=lambda unit: unit_metrics[unit]["productivity"],
+    )
+
+    lowest_satisfaction_unit = min(
+        unit_metrics,
+        key=lambda unit: unit_metrics[unit]["satisfaction"],
+    )
+
+    highest_cost_ratio_unit = max(
+        unit_metrics,
+        key=lambda unit: unit_metrics[unit]["cost_ratio"],
+    )
+
+    highest_complaints_unit = max(
+        unit_metrics,
+        key=lambda unit: unit_metrics[unit]["complaints"],
+    )
+
+    best_efficiency_unit = max(
+        unit_metrics,
+        key=lambda unit: unit_metrics[unit][
+            "revenue_per_employee"
+        ],
+    )
+
+
+    # ------------------------------------
+# PERFORMANCE CARDS
+# ------------------------------------
+
+insight_col1, insight_col2, insight_col3 = st.columns(3)
+
+insight_col1.metric(
+    "Top Profit Unit",
+    highest_profit_unit,
+    f"${unit_metrics[highest_profit_unit]['profit']:,.0f}",
+)
+
+insight_col2.metric(
+    "Best Revenue / Employee",
+    best_efficiency_unit,
+    f"${unit_metrics[best_efficiency_unit]['revenue_per_employee']:,.0f}",
+)
+
+insight_col3.metric(
+    "Highest Cost Ratio",
+    highest_cost_ratio_unit,
+    f"{unit_metrics[highest_cost_ratio_unit]['cost_ratio']:.1f}%",
+)
+
+st.markdown("### Management Attention Points")
+
+
+# ------------------------------------
+# MANAGEMENT SUMMARY
+# ------------------------------------
+
+st.divider()
+
+st.subheader("Management Summary")
+
+
+if unit_metrics:
+
+    management_priority = min(
+        unit_metrics,
+        key=lambda unit: (
+            unit_metrics[unit]["margin"]
+            + unit_metrics[unit]["productivity"]
+            + unit_metrics[unit]["satisfaction"]
+        ),
+    )
+
+    st.write(
+        f"Based on the currently selected data, "
+        f"**{management_priority}** deserves additional "
+        "management attention because its combined financial, "
+        "productivity and customer experience indicators are "
+        "weaker relative to the other selected business units."
+    )
+
+    st.write(
+        f"Meanwhile, **{highest_profit_unit}** currently leads "
+        "in total profitability and can be used as a reference "
+        "point when investigating operational practices that "
+        "could be replicated across other units."
+    )
