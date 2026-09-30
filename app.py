@@ -4,6 +4,11 @@ from collections import defaultdict
 import streamlit as st
 import plotly.graph_objects as go
 
+import os
+import json
+import urllib.request
+import urllib.error
+
 
 st.set_page_config(
     page_title="AI Operations Dashboard",
@@ -490,9 +495,38 @@ insight_col3.metric(
     "Highest Cost Ratio",
     highest_cost_ratio_unit,
     f"{unit_metrics[highest_cost_ratio_unit]['cost_ratio']:.1f}%",
+    delta_color="inverse",
 )
 
 st.markdown("### Management Attention Points")
+
+st.warning(
+    f"**{lowest_margin_unit}** has the lowest profit margin at "
+    f"**{unit_metrics[lowest_margin_unit]['margin']:.1f}%**. "
+    "Management should review operating costs, pricing and process efficiency."
+)
+
+st.warning(
+    f"**{lowest_productivity_unit}** has the lowest average productivity at "
+    f"**{unit_metrics[lowest_productivity_unit]['productivity']:.1f}%**. "
+    "This unit may require a workflow, staffing or process review."
+)
+
+st.warning(
+    f"**{lowest_satisfaction_unit}** has the lowest customer satisfaction at "
+    f"**{unit_metrics[lowest_satisfaction_unit]['satisfaction']:.1f}%**."
+)
+
+st.info(
+    f"**{highest_complaints_unit}** generated the highest number of "
+    f"customer complaints: "
+    f"**{unit_metrics[highest_complaints_unit]['complaints']:,}**."
+)
+
+st.success(
+    f"**{highest_profit_unit}** generated the strongest financial result "
+    f"with **${unit_metrics[highest_profit_unit]['profit']:,.0f} in profit**."
+)
 
 
 # ------------------------------------
@@ -529,3 +563,204 @@ if unit_metrics:
         "point when investigating operational practices that "
         "could be replicated across other units."
     )
+
+    # ------------------------------------
+# AI BUSINESS ANALYST
+# ------------------------------------
+
+st.divider()
+
+st.subheader("AI Business Analyst")
+
+st.caption(
+    "Ask questions about the currently selected business units "
+    "and receive AI-assisted operational analysis."
+)
+
+
+def build_business_context():
+
+    unit_lines = []
+
+    for unit, metrics in unit_metrics.items():
+
+        unit_lines.append(
+            f"""
+{unit}:
+Revenue: ${metrics['revenue']:,.2f}
+Operating Cost: ${metrics['cost']:,.2f}
+Profit: ${metrics['profit']:,.2f}
+Profit Margin: {metrics['margin']:.2f}%
+Productivity: {metrics['productivity']:.2f}%
+Customer Satisfaction: {metrics['satisfaction']:.2f}%
+Customer Complaints: {metrics['complaints']}
+Revenue per Employee: ${metrics['revenue_per_employee']:,.2f}
+Operating Cost Ratio: {metrics['cost_ratio']:.2f}%
+"""
+        )
+
+    return f"""
+Overall selected-period KPIs:
+
+Total Revenue: ${total_revenue:,.2f}
+Total Operating Cost: ${total_cost:,.2f}
+Total Profit: ${total_profit:,.2f}
+Profit Margin: {profit_margin:.2f}%
+Total Orders: {total_orders:,}
+Average Productivity: {average_productivity:.2f}%
+Average Customer Satisfaction: {average_satisfaction:.2f}%
+
+Business Unit Data:
+
+{''.join(unit_lines)}
+"""
+
+
+def extract_response_text(response_data):
+
+    for item in response_data.get("output", []):
+
+        if item.get("type") != "message":
+            continue
+
+        for content in item.get("content", []):
+
+            if content.get("type") == "output_text":
+
+                return content.get("text", "")
+
+    return "No text response was returned by the AI model."
+
+
+def ask_ai_business_analyst(question):
+
+    api_key = os.getenv("OPENAI_API_KEY")
+
+    if not api_key:
+
+        return None
+
+    model = os.getenv(
+    "OPENAI_MODEL",
+    "gpt-6-luna",
+)
+
+    business_context = build_business_context()
+
+    payload = {
+        "model": model,
+        "instructions": (
+            "You are a senior Business Operations and Data Analyst. "
+            "Analyze only the business data provided to you. "
+            "Do not invent missing information. "
+            "Explain findings clearly and concisely. "
+            "Prioritize operational risks, financial performance, "
+            "productivity and customer experience. "
+            "When recommending action, explain which metrics support it."
+        ),
+        "input": (
+            f"BUSINESS DATA:\n{business_context}\n\n"
+            f"USER QUESTION:\n{question}"
+        ),
+    }
+
+    request = urllib.request.Request(
+        "https://api.openai.com/v1/responses",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+
+    try:
+
+        with urllib.request.urlopen(
+            request,
+            timeout=60,
+        ) as response:
+
+            response_data = json.loads(
+                response.read().decode("utf-8")
+            )
+
+        return extract_response_text(
+            response_data
+        )
+
+    except urllib.error.HTTPError as error:
+
+        error_body = error.read().decode(
+            "utf-8",
+            errors="ignore",
+        )
+
+        return (
+            f"API error ({error.code}). "
+            f"Check your API key, model access and billing.\n\n"
+            f"{error_body}"
+        )
+
+    except Exception as error:
+
+        return (
+            "Unable to contact the AI service. "
+            f"Technical details: {error}"
+        )
+
+
+question = st.text_input(
+    "Ask a question about your operations",
+    placeholder=(
+        "Example: Which business unit should management investigate first?"
+    ),
+)
+
+
+suggestion_col1, suggestion_col2 = st.columns(2)
+
+with suggestion_col1:
+
+    st.caption(
+        "Examples: Which unit has the weakest performance?"
+    )
+
+with suggestion_col2:
+
+    st.caption(
+        "Where should management focus to reduce costs?"
+    )
+
+
+if st.button(
+    "Ask AI",
+    type="primary",
+):
+
+    if not question.strip():
+
+        st.warning(
+            "Enter a question before running the analysis."
+        )
+
+    elif not os.getenv("OPENAI_API_KEY"):
+
+        st.warning(
+            "AI integration is ready, but OPENAI_API_KEY "
+            "has not been configured yet."
+        )
+
+    else:
+
+        with st.spinner(
+            "Analyzing operational data..."
+        ):
+
+            answer = ask_ai_business_analyst(
+                question
+            )
+
+        st.markdown("### AI Analysis")
+
+        st.write(answer)
