@@ -74,3 +74,12 @@ ai-operations-dashboard/
 ├── README.md
 ├── .gitignore
 └── LICENSE
+
+## OpenAI API Setup
+
+Create an OpenAI API key and configure it as an environment variable.
+
+### Windows PowerShell
+
+```powershell
+setx OPENAI_API_KEY "your_api_key_here"
